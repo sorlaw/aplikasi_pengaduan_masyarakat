@@ -1,0 +1,249 @@
+The MIT License
+
+Copyright (c) 2008-2010 Dmitry Baranovskiy
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+if (isset($_POST['cek'])) {
+    $pilihan = $_POST['pilihan']; //masyarakat atau petugas
+    $username = $_POST['username'];
+    $password = md5($_POST['password']);
+ if ($pilihan == 'masyarakat') {
+    $q = mysqli_query($con, "SELECT * FROM `masyarakat` WHERE username='$username' AND password='$password' AND verifikasi= 1 ");
+    $r = mysqli_num_rows($q);
+    if ($r == 1) {
+        $d = mysqli_fetch_object($q);
+        session_start();
+        $_SESSION['nik'] = $d->$nik;
+        $_SESSION['nama'] = $d->$nama;
+        $_SESSION['username'] = $d->$username;
+        $_SESSION['telp'] = $d->$telp;
+        $_SESSION['level'] = 'masyarakat';
+        header('location:../page/profile.php');
+    } else {
+        echo '<div class="alert alert-danger alert-dismissable" >
+        <a href="" class="close" data-dismiss="alert" ></a>
+        data yang anda masukan salah atau belum terverifikasi
+        </div>';
+    }
+} elseif ($pilihan == 'petugas'){
+    $q = mysqli_query($con, "SELECT * FROM `petugas` WHERE username='$username' AND password='$password'");
+    $r = mysqli_num_rows($q);
+    if ($r == 1) {
+        $d = mysqli_fetch_object($q);
+        session_start();
+        $_SESSION['username'] = $d->$username;
+        $_SESSION['id_petugas'] = $d->$id_petugas;
+        $_SESSION['level'] = $d->$level;
+        header('location:../page/petugas.php');
+    }
+}
+}
+
+if (isset($_POST['simpan'])) {
+    $nik = $_POST['nik'];
+    $nama = $_POST['nama'];
+    $username = $_POST['username'];
+    $password = md5($_POST['password']);
+    $telp = $_POST['telp'];
+    $q = mysqli_query($con, "INSERT INTO `masyarakat` (nik, nama, username, password, telp, verifikasi) VALUES ('$nik', '$nama', '$username', '$password', $telp, 0)");
+    if ($q) {
+        echo  '<div class="alert alert-success alert-dismissable">
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
+                Registrasi Berhasil Tunggu verifikasi oleh admin
+                </div>';
+    }
+}
+
+session_start();
+include('../../config/database.php');
+if (empty($_SESSION['username'])) {
+    @header('location:../modul-auth/index.php');
+}
+// CRUD
+if (isset($_POST['edit'])) {
+    $status = $_POST['status'];
+    $nik = $_POST['nik'];
+    $q = mysqli_query($con, "UPDATE `masyarakat` SET verifikasi = '$status' WHERE nik = '$nik'");
+}
+
+if (isset($_POST['hapus'])) {
+    $nik = $_POST['nik'];
+    $q = mysqli_query($con, "DELETE FROM `masyarakat` WHERE nik = '$nik'");
+}
+if (isset($_POST['update'])) {
+    $nikLama = $_POST['nikLama'];
+    $nik = $_POST['nik'];
+    $nama = $_POST['nama'];
+    $username = $_POST['username'];
+    $telp = $_POST['telp'];
+    $password = md5($_POST['password']);
+    if ($password == '') {
+        $q = mysqli_query($con, "UPDATE `masyarakat` SET nik = '$nik', nama = '$nama', username = '$username', telp = '$telp' WHERE nik = '$nikLama'");
+    } else {
+        $q = mysqli_query($con, "UPDATE `masyarakat` SET `password` = '$password', nik = '$nik', nama = '$nama', username = '$username', telp = '$telp' WHERE nik = '$nikLama'");
+    }
+}
+
+session_start();
+include('../../config/database.php');
+if (empty($_SESSION['username'])) {
+    @header('location:../modul-auth/index.php');
+} else {
+    if ($_SESSION['level'] == 'masyarakat') {
+        $nik = $_SESSION['nik'];
+    }
+}
+// CRUD
+if (isset($_POST['tambahPengaduan'])) {
+    $isi_laporan = $_POST['isi_laporan'];
+    $tgl = $_POST['tgl_pengaduan'];
+    //upload
+    $ekstensi_diperbolehkan = array('jpg', 'png');
+    $foto = $_FILES['foto']['name'];
+    print_r($foto);
+    $x = explode(".", $foto);
+    $ekstensi = strtolower(end($x));
+    $file_tmp = $_FILES['foto']['tmp_name'];
+    if (!empty($foto)) {
+        if (in_array($ekstensi, $ekstensi_diperbolehkan) === true) {
+            $q = "INSERT INTO `pengaduan`(id_pengaduan, tgl_pengaduan, nik, isi_laporan, foto, `status`) VALUES ('', '$tgl', '$nik', '$isi_laporan', '$foto', '0')";
+            $r = mysqli_query($con, $q);
+            if ($r) {
+                move_uploaded_file($file_tmp, '../../assets/images/masyarakat/' . $foto);
+            }
+        }
+    } else {
+        $q = "INSERT INTO `pengaduan`(id_pengaduan, tgl_pengaduan, nik, isi_laporan, foto, `status`) VALUES ('', '$tgl', '$nik', '$isi_laporan', '', '0')";
+        $r = mysqli_query($con, $q);
+    }
+}
+
+session_start();
+if (empty($_SESSION['username'])) {
+    @header('location:../modul-auth/index.php');
+} else {
+    $nik = $_SESSION['nik'];
+    $nama = $_SESSION['nama'];
+    $username = $_SESSION['username'];
+    $telp = $_SESSION['telp'];
+}
+
+include('../../config/database.php');
+if (empty($_SESSION['username'])) {
+    @header('location:../modul-auth/index.php');
+} else {
+    if ($_SESSION['level'] == 'masyarakat') {
+        $nik = $_SESSION['nik'];
+    } else {
+        $id_petugas = $_SESSION['id_petugas'];
+    }
+}
+// tambah tanggapan
+if (isset($_POST['tambah_tanggapan'])) {
+    $id_pengaduan = $_POST['id_pengaduan'];
+    $tgl_tanggapan = $_POST['tgl_tanggapan'];
+    $id_petugas = $_POST['id_petugas'];
+    $tanggapan = $_POST['tanggapan'];
+    $q = "INSERT INTO `tanggapan` (id_tanggapan, id_pengaduan, tgl_tanggapan, tanggapan, id_petugas) VALUES ('','$id_pengaduan', '$tgl_tanggapan', '$tanggapan', '$id_petugas')";
+    $r = mysqli_query($con, $q);
+}
+// hapus tanggapan
+if (isset($_POST['hapusTanggapan'])) {
+    $id_tanggapan = $_POST['id_tanggapan'];
+    mysqli_query($con, "DELETE FROM `tanggapan` WHERE id_tanggapan = '$id_tanggapan'");
+}
+// update tanggapan
+if (isset($_POST['ubahTanggapan'])) {
+    $id_tanggapan =  $_POST['id_tanggapan'];
+    $tgl_tanggapan = $_POST['tgl_tanggapan'];
+    $tanggapan = $_POST['tanggapan'];
+    mysqli_query($con, "UPDATE `tanggapan` SET tgl_tanggapan = '$tgl_tanggapan', tanggapan = '$tanggapan' WHERE `id_tanggapan` = '$id_tanggapan'");
+}
