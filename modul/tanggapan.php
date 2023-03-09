@@ -45,13 +45,7 @@ if (isset($_POST['ubahTanggapan'])) {
     <div class="container-fluid mt-3">
         <div class="row justify-content-center">
             <div class="info">
-                <div class="alert alert-success mt-5" alert-dismiss>
-                    <h5>Halo!
-                        <br> Selamat datang
-                        <?= $_SESSION['username'] ?> Anda login sebagai
-                        <?= $_SESSION['level'] ?>
-                    </h5>
-                </div>
+               
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
